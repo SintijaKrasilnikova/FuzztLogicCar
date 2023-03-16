@@ -1,0 +1,115 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+using FLS;
+using FLS.Rules;
+using FLS.MembershipFunctions;
+
+public class FuzzyBox : MonoBehaviour {
+
+	bool selected = false;
+
+    public GameObject fallowObject;
+
+	IFuzzyEngine engine;
+	LinguisticVariable distance;
+	LinguisticVariable direction;
+	LinguisticVariable speed;
+	LinguisticVariable endSpeed;
+
+    public float highValue = 100f;
+    public float midValue = 50f;
+
+    public float highValueSpeed = 200f;
+    public float lowValueSpeed = 100f;
+
+    void Start()
+	{
+        // Here we need to setup the Fuzzy Inference System
+
+
+        distance = new LinguisticVariable("distance");
+        var farRight = distance.MembershipFunctions.AddTrapezoid("farRight", -highValue, -highValue, -midValue, -midValue);
+
+        var right = distance.MembershipFunctions.AddTrapezoid("right", -midValue, -midValue, -2, -1);
+        var none = distance.MembershipFunctions.AddTrapezoid("none", -2, -0.5, 0.5, 2);
+        var left = distance.MembershipFunctions.AddTrapezoid("left", 1, 2, midValue, midValue);
+
+        var farLeft = distance.MembershipFunctions.AddTrapezoid("farLeft", midValue, midValue, highValue, highValue);
+
+
+
+        direction = new LinguisticVariable("direction");
+
+        var d_farRight = direction.MembershipFunctions.AddTrapezoid("farRight", -highValue, -highValue, -midValue, -midValue);
+
+        var d_right = direction.MembershipFunctions.AddTrapezoid("right", -midValue, -midValue, -2, -1);
+        var d_none = direction.MembershipFunctions.AddTrapezoid("none", -2, -0.5, 0.5, 2);
+        var d_left = direction.MembershipFunctions.AddTrapezoid("left", 1, 2, midValue, midValue);
+
+        var d_farLeft = direction.MembershipFunctions.AddTrapezoid("farLeft", midValue, midValue, highValue, highValue);
+
+        speed = new LinguisticVariable("speed");
+
+        var s_fastSpeedL = speed.MembershipFunctions.AddTrapezoid("fastSpeedL", -40.0, -40.0, -30.0, -25.0);
+        var s_midSpeedL = speed.MembershipFunctions.AddTrapezoid("mediumSpeedL", -30.0, -25.0, -15.0, -10.0);
+        var s_slowSpeedL = speed.MembershipFunctions.AddTrapezoid("slowSpeedL", -15.0, -10.0, -0.1, -0.1);
+        
+        var s_noSpeed = speed.MembershipFunctions.AddTrapezoid("noSpeed", -0.1, -0.1, 0.1, 0.1);
+
+        var s_slowSpeedR = speed.MembershipFunctions.AddTrapezoid("slowSpeedR", 0.1, 0.1, 10.0, 15.0);
+        var s_midSpeedR = speed.MembershipFunctions.AddTrapezoid("mediumSpeedR", 10.0, 15.0, 25.0, 30.0);
+        var s_fastSpeedR = speed.MembershipFunctions.AddTrapezoid("fastSpeedR", 25.0, 30.0, 40, 40);
+
+        //engine
+        engine = new FuzzyEngineFactory().Default();
+
+        var rule0 = Rule.If(distance.Is(farRight)).Then(direction.Is(d_farLeft));
+        var rule1 = Rule.If(distance.Is(right)).Then(direction.Is(d_left));//move to the left
+        var rule2 = Rule.If(distance.Is(left)).Then(direction.Is(d_right));//move to the right
+        var rule3 = Rule.If(distance.Is(none)).Then(direction.Is(d_none));//doesnt move
+        var rule4 = Rule.If(distance.Is(farLeft)).Then(direction.Is(d_farRight));
+
+
+        //var rule5 = Rule.If(distance.Is(d_farLeft)).Then(speed.Is(s_fastSpeedL));
+        //var rule6 = Rule.If(distance.Is(d_left)).Then(speed.Is(s_midSpeedL));
+        //var rule7 = Rule.If(distance.Is(d_none)).Then(speed.Is(s_noSpeed));
+        //var rule8 = Rule.If(distance.Is(d_right)).Then(speed.Is(s_midSpeedR));
+        //var rule9 = Rule.If(distance.Is(d_farRight)).Then(speed.Is(s_fastSpeedR));
+
+        var rule5 = Rule.If(speed.Is(s_fastSpeedL)).Then(direction.Is(d_farLeft));
+        var rule6 = Rule.If(speed.Is(s_midSpeedL)).Then(direction.Is(d_left));
+        var rule7 = Rule.If(speed.Is(s_noSpeed)).Then(direction.Is(d_none));
+        var rule8 = Rule.If(speed.Is(s_midSpeedR)).Then(direction.Is(d_right));
+        var rule9 = Rule.If(speed.Is(s_fastSpeedR)).Then(direction.Is(d_farRight));
+
+
+        engine.Rules.Add(rule0, rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9);//adding rules to the engine
+
+
+    }
+
+    void FixedUpdate()
+	{
+
+        if (this.transform.position.x != fallowObject.transform.position.x)
+        {
+            // Convert position of box to value between 0 and 100
+            //double result = 0.0;//doesnt move the box
+
+            Rigidbody rigidbody = GetComponent<Rigidbody>();
+
+            double diff = this.transform.position.x - fallowObject.transform.position.x;
+            double result = engine.Defuzzify(new { distance = (double)diff, speed = (double)Mathf.Abs(rigidbody.velocity.x) });
+           
+
+            Debug.Log(result);
+
+            rigidbody.AddForce(new Vector3((float)(result), 0f, 0f));
+
+        }
+    }
+	
+}
