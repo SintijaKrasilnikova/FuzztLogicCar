@@ -14,6 +14,7 @@ public class FuzzyBox : MonoBehaviour {
 
     public GameObject fallowObject;
     public GameObject rockObject;
+    public SpriteRenderer rockSprite;
 
 	IFuzzyEngine engine;
 	LinguisticVariable distance;
@@ -51,11 +52,12 @@ public class FuzzyBox : MonoBehaviour {
         rockDistance = new LinguisticVariable("rockDistance");
 
         var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", -20, -20, -5, -2);
-        var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, -1, -0.5);
+        //var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, -1, -0.5);
+        var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, 0, -0);
         
 
         //var rockFar = rockDistance.MembershipFunctions.AddTrapezoid("rockFar", -1, -0.25, 0.25, 1);
-        var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", 0.5, 1, 2, 5);
+        var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", 0, 0, 2, 5);
         var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", 2, 5, 20, 20);
 
 
@@ -93,20 +95,24 @@ public class FuzzyBox : MonoBehaviour {
         var rule0 = Rule.If(distance.Is(farRight).And(rockDistance.IsNot(rockCloseLeft))).Then(direction.Is(d_farLeft));
         var rule1 = Rule.If(distance.Is(right).And(rockDistance.IsNot(rockCloseLeft))).Then(direction.Is(d_left));//move to the left
         var rule2 = Rule.If(distance.Is(left).And(rockDistance.IsNot(rockCloseRight))).Then(direction.Is(d_right));//move to the right
-        var rule3 = Rule.If(distance.Is(none)).Then(direction.Is(d_none));//doesnt move
+        var rule3 = Rule.If(distance.Is(none).And(rockDistance.IsNot(rockCloseRight))).Then(direction.Is(d_none));//doesnt move
+        var rule31 = Rule.If(distance.Is(none).And(rockDistance.IsNot(rockCloseLeft))).Then(direction.Is(d_none));//doesnt move
         var rule4 = Rule.If(distance.Is(farLeft).And(rockDistance.IsNot(rockCloseRight))).Then(direction.Is(d_farRight));
 
         //kinda avoids objects
-        var rule5 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(direction.Is(d_farLeft));
-        var rule6 = Rule.If(rockDistance.Is(rockCloseRight)).Then(direction.Is(d_farRight));
+        //var rule5 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(direction.Is(d_farLeft));
+        //var rule6 = Rule.If(rockDistance.Is(rockCloseRight)).Then(direction.Is(d_farRight));
 
+        var rule5 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(direction.Is(d_farRight));
+        var rule6 = Rule.If(rockDistance.Is(rockCloseRight)).Then(direction.Is(d_farLeft));
 
 
         //engine.Rules.Add(rule1, rule2, rule3);//adding rules to the engine
-        engine.Rules.Add(rule0, rule1, rule2, rule3, rule4, rule5, rule6);//adding rules to the engine
+        engine.Rules.Add(rule0, rule1, rule2, rule3, rule31, rule4, rule5, rule6);//adding rules to the engine
 
 
         rigidbody = GetComponent<Rigidbody>();
+        rockSprite = rockObject.GetComponent<SpriteRenderer>();
 
     }
 
@@ -118,7 +124,18 @@ public class FuzzyBox : MonoBehaviour {
             // Convert position of box to value between 0 and 100
             //double result = 0.0;//doesnt move the box
 
-            double diffRock = this.transform.position.x - rockObject.transform.position.x;
+            //double diffRock = this.transform.position.x - rockObject.transform.position.x;
+            double diffRock = rockObject.transform.position.x - this.transform.position.x;
+            //double diffRock = 0;
+
+            //if(rockObject.transform.position.x < this.transform.position.x )//means rock is to the left
+            //{
+            //    diffRock = rockObject.transform.position.x - (rockSprite.size.x/2) - this.transform.position.x;
+            //}
+            //else//rock in on the right side
+            //{
+            //    diffRock = rockObject.transform.position.x + (rockSprite.size.x / 2) - this.transform.position.x;
+            //}
             Debug.Log(diffRock);
 
 
