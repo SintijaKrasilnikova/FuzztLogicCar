@@ -5,8 +5,8 @@ using UnityEngine;
 public class RockSpawner : MonoBehaviour
 {
 
-    public Transform roadTranfRef;
-    public Transform spawnTranfRef;
+    [SerializeField] Transform roadTranfRef;
+    [SerializeField] Transform spawnTranfRef;
     [SerializeField] private GameObject rockRef;
     [SerializeField] private MeshRenderer roadSizeRef;
 

@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 public class CollidingWithRock : MonoBehaviour
 {
-    public Text collisionNumberText;
-    public int collisionNumber = 0;
+    [SerializeField] Text collisionNumberText;
+    [SerializeField] int collisionNumber = 0;
     private void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("car"))
