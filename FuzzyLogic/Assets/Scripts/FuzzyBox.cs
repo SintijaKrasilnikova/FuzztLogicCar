@@ -15,7 +15,7 @@ public class FuzzyBox : MonoBehaviour {
     [SerializeField] Text speedText;
     [SerializeField] GameObject fallowObject;
     [SerializeField] GameObject rockObject;
-    [SerializeField] SpriteRenderer rockSprite;
+    [SerializeField] LevelSO level;
 
 	IFuzzyEngine engine;
 	LinguisticVariable distance;
@@ -23,15 +23,12 @@ public class FuzzyBox : MonoBehaviour {
 	//LinguisticVariable direction;
 	LinguisticVariable speed;
 
-    public float closeDistance = 2f;
+    public float closeDistance=0;
 
-    public float maxCarSpeed = 70f;
 
-    public float highValue = 100f;
-    public float midValue = 50f;
+    private float highValue = 50;
+    private float midValue = 5;
 
-    public float highValueD = 100f;
-    public float midValueD = 50f;
 
   
 
@@ -40,6 +37,16 @@ public class FuzzyBox : MonoBehaviour {
 
     void Start()
 	{
+
+        if (level.closeDist == 0)
+        {
+            closeDistance = 3.5f;
+        }
+        else
+        {
+            closeDistance = (float)level.closeDist;
+        }
+
         // Here we need to setup the Fuzzy Inference System
 
         //distance variables
@@ -59,18 +66,25 @@ public class FuzzyBox : MonoBehaviour {
 
         rockDistance = new LinguisticVariable("rockDistance");
 
-        //var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", -20, -20, -5, -2);
-        var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", -20, -20, -5, -closeDistance);
-        //var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, -1, -0.5);
-        //var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, 0, -0);
-        var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", -5, -closeDistance, -0, -0);
-        
+        ////var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", -20, -20, -5, -2);
+        //var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", -20, -20, -5, -closeDistance);
+        ////var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, -1, -0.5);
+        ////var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", -5, -2, 0, -0);
+        //var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", -5, -closeDistance, -0, -0);
 
-        //var rockFar = rockDistance.MembershipFunctions.AddTrapezoid("rockFar", -1, -0.25, 0.25, 1);
-        //var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", 0, 0, 2, 5);
-        var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", 0, 0, closeDistance, 5);
-        //var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", 2, 5, 20, 20);
-        var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", closeDistance, 5, 20, 20);
+
+        ////var rockFar = rockDistance.MembershipFunctions.AddTrapezoid("rockFar", -1, -0.25, 0.25, 1);
+        ////var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", 0, 0, 2, 5);
+        //var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", 0, 0, closeDistance, 5);
+        ////var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", 2, 5, 20, 20);
+        //var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", closeDistance, 5, 20, 20);
+
+
+        var rockFarLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockFarLeft", -20, -20, -6, -closeDistance);
+        var rockCloseLeft = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseLeft", -6, -closeDistance, -0, -0);
+
+        var rockCloseRight = rockDistance.MembershipFunctions.AddTrapezoid("rockCloseRight", 0, 0, closeDistance, 6);
+        var rockFarRight = rockDistance.MembershipFunctions.AddTrapezoid("rockFarRight", closeDistance, 6, 20, 20);
 
 
         ////direction variables
@@ -160,18 +174,27 @@ public class FuzzyBox : MonoBehaviour {
         var rule5 = Rule.If(distance.Is(farLeft).And(rockDistance.IsNot(rockCloseLeft))).Then(speed.Is(fastLeft));
 
         //kinda avoids objects
-        //var rule5 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(direction.Is(d_farLeft));
-        //var rule6 = Rule.If(rockDistance.Is(rockCloseRight)).Then(direction.Is(d_farRight));
+        //var rule6 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(direction.Is(d_farLeft));
+        //var rule7 = Rule.If(rockDistance.Is(rockCloseRight)).Then(direction.Is(d_farRight));
 
         var rule6 = Rule.If(rockDistance.Is(rockCloseLeft)).Then(speed.Is(mediumRight));
         var rule7 = Rule.If(rockDistance.Is(rockCloseRight)).Then(speed.Is(mediumLeft));
 
+        ////ignores rocks far away
+        //var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(fastRight));
+        //var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(fastLeft));
 
-        //var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(mediumRight));
-        //var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(mediumLeft));
+        //priority road
+        var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(mediumRight));
+        var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(mediumLeft));
 
-        var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(mediumLeft));
-        var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(mediumRight));
+        ////priority avoiding rocks
+        //var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(mediumLeft));
+        //var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(mediumRight));
+
+        ////the left over velocity is too big so the car cannot stop in time with these values
+        //var rule8 = Rule.If(distance.Is(farRight).And(rockDistance.Is(rockFarRight))).Then(speed.Is(noSpeed));
+        //var rule9 = Rule.If(distance.Is(farLeft).And(rockDistance.Is(rockFarLeft))).Then(speed.Is(noSpeed));
 
 
         //var rule10 = Rule.If(distance.Is(right).And(rockDistance.Is(rockCloseRight))).Then(speed.Is(mediumLeft));
@@ -183,7 +206,7 @@ public class FuzzyBox : MonoBehaviour {
 
 
         rigidbody = GetComponent<Rigidbody>();
-        rockSprite = rockObject.GetComponent<SpriteRenderer>();
+        //rockSprite = rockObject.GetComponent<SpriteRenderer>();
 
     }
 
@@ -219,10 +242,15 @@ public class FuzzyBox : MonoBehaviour {
             //double result = engine.Defuzzify(new { distance = (double)diff, speed = (double)Mathf.Abs(rigidbody.velocity.x) });
 
 
-            Debug.Log(result);
+           // Debug.Log(result);
 
             rigidbody.AddForce(new Vector3((float)(result ), 0f, 0f));
+            //rigidbody.velocity = (new Vector3((float)(result ), 0f, 0f));
             speedText.text = "Force apllied currently: " + ((int)rigidbody.velocity.x).ToString();
+            // Debug.Log(speed.Name);
+
+            Debug.Log(closeDistance);
+            //Debug.Log(diff);
 
         }
 

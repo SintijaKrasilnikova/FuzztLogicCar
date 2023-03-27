@@ -6,4 +6,5 @@ using UnityEngine;
 public class LevelSO : ScriptableObject
 {
     public int levelNumber = 1;
+    public int closeDist=2;
 }
